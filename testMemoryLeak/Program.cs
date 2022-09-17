@@ -6,26 +6,33 @@ using Microsoft.EntityFrameworkCore;
 var builder = new DbContextOptionsBuilder();
 builder.UseSqlite("Filename=MyDatabase.db");
 var sql = new SqlLiteDbContext(builder.Options);
-
+sql.ChangeTracker.AutoDetectChangesEnabled = true;
 sql.Database.EnsureDeleted();
 sql.Database.EnsureCreated();
 var process = Process.GetCurrentProcess();
 PerformanceCounter ramCounter = new PerformanceCounter("Process", "Working Set", process.ProcessName);
-var random = new Random();  
-for (int i = 0; i < 500; i++)
+var random = new Random();
+var ls = new List<string>();
+for (int i = 0; i < 100; i++)
 {
     sql.information.Add(new Info()
     {
-        BigOrMiniText = string.Concat(Enumerable.Repeat('1', random.Next(10000,100000)))
+        BigOrMiniText = string.Concat(Enumerable.Repeat('1', random.Next(10000, 100000)))
     });
     sql.SaveChanges();
+    string text = string.Concat(Enumerable.Repeat('1', random.Next(10000, 100000)));
+    //ls.Add(text);
     GC.Collect();
+    //await Task.Delay(5000);
     Console.WriteLine(ramCounter.NextValue());
 }
-sql.Dispose();
+///ls.Clear();
+//sql.ChangeTracker.Clear();
+//sql.Dispose();
 GC.Collect();
-await Task.Delay(1000);
+await Task.Delay(1000*120);
 Console.WriteLine("End "+ramCounter.NextValue());
+sql.Database.EnsureDeleted();
 Console.ReadKey();
 
 
